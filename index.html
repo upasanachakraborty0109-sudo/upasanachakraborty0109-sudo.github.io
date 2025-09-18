@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Why Language Models Hallucinate: An Interactive Summary</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Warm Neutrals -->
+    <!-- Application Structure Plan: The application is designed as a single-page narrative that guides the user through the paper's central argument. It starts with a high-level summary, defines the problem, explores the two main causes (statistical pressures in training and misaligned evaluation incentives), presents the proposed solution, and concludes with key takeaways. The core of the application is an interactive visualization of scoring rules. This structure was chosen to make a complex academic argument accessible and digestible, with the interactive element providing a hands-on demonstration of the paper's most critical point, thereby enhancing user understanding more effectively than a static summary. -->
+    <!-- Visualization & Content Choices: Report Info: Table 1 comparing scoring rules -> Goal: Compare/Explain -> Viz/Presentation Method: Interactive Bar Chart -> Interaction: User selects scoring rule (Binary, Brier, Log) and model confidence (slider) to see the resulting scores for correct, incorrect, and 'IDK' answers. -> Justification: This directly visualizes the paper's core thesis that current evaluation methods incentivize guessing. It turns an abstract table into an intuitive, explorable experience. -> Library/Method: Chart.js/Canvas. Report Info: Concept of hallucinations as classification errors -> Goal: Inform -> Viz/Presentation Method: Simple diagram built with HTML/Tailwind -> Interaction: None -> Justification: Provides a simple visual metaphor for a key theoretical concept. -> Library/Method: HTML/CSS. All other information is presented in structured text blocks for clarity. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8;
+            color: #4A4A4A;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 50vh;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 450px;
+            }
+        }
+        .nav-link {
+            transition: color 0.3s;
+        }
+        .nav-link:hover {
+            color: #4C51BF;
+        }
+        .active-btn {
+            background-color: #4C51BF !important;
+            color: #FFFFFF !important;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-200">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-lg font-bold text-gray-800">LLM Hallucinations</h1>
+            <div class="hidden md:flex space-x-8">
+                <a href="#problem" class="text-gray-600 nav-link">The Problem</a>
+                <a href="#causes" class="text-gray-600 nav-link">The Causes</a>
+                <a href="#interactive" class="text-gray-600 nav-link">Interactive Demo</a>
+                <a href="#solution" class="text-gray-600 nav-link">The Solution</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-12 md:py-20">
+
+        <section class="text-center mb-20">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Why Do Language Models Hallucinate?</h1>
+            <p class="text-lg text-gray-700 max-w-3xl mx-auto">
+                An interactive summary of the paper by Kalai et al. (2025), exploring why Large Language Models (LLMs) produce plausible yet incorrect statements, and how we can build more trustworthy AI.
+            </p>
+        </section>
+
+        <section id="problem" class="mb-20 scroll-mt-20">
+            <div class="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-sm border border-gray-200">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">The Problem: Guessing on the Exam</h2>
+                <div class="space-y-4 text-gray-700">
+                    <p>The paper argues that LLMs behave like students taking a difficult exam. When faced with a question they're uncertain about, they often choose to guess rather than admit "I don't know." This behavior, called "hallucination," produces confident-sounding but false information, which erodes trust in AI systems.</p>
+                    <p>This isn't a mysterious flaw. The authors propose it's a predictable outcome of how these models are trained and, more importantly, how they are evaluated. The systems we use to rank and score AI models often inadvertently reward them for guessing.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="causes" class="mb-20 scroll-mt-20">
+            <h2 class="text-3xl font-bold text-gray-800 text-center mb-10">The Two Main Causes</h2>
+            <div class="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+
+                <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-200">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">1. Statistical Pressures in Training</h3>
+                    <p class="text-gray-700 mb-6">During pre-training on vast amounts of internet text, a model learns to predict the next word. The paper frames hallucination as a simple error in binary classification: the model struggles to distinguish a true statement from a plausible-sounding falsehood. If these two categories of statements are statistically similar in the training data, the model will inevitably make mistakes.</p>
+                    <div class="w-full p-4 border-2 border-dashed rounded-lg flex items-center justify-center">
+                         <div class="relative w-48 h-24">
+                            <div class="absolute top-0 left-0 w-24 h-24 bg-blue-200 rounded-full opacity-60"></div>
+                            <div class="absolute top-0 right-0 w-24 h-24 bg-red-200 rounded-full opacity-60"></div>
+                            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
+                                <span class="font-bold text-gray-700 text-sm">Hallucination Zone</span>
+                                <p class="text-xs text-gray-600">(Plausible but False)</p>
+                            </div>
+                         </div>
+                    </div>
+                     <p class="text-xs text-center mt-2 text-gray-500">A simplified view: When the distributions of "true facts" (blue) and "plausible falsehoods" (red) overlap, the model may generate content from the intersection, leading to hallucinations.</p>
+                </div>
+
+                <div class="bg-white p-8 rounded-xl shadow-sm border border-ray-200">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4">2. Misaligned Evaluation Incentives</h3>
+                    <p class="text-gray-700 mb-6">This is the paper's core argument. Hallucinations persist because the benchmarks used to evaluate and rank LLMs are like multiple-choice tests with no penalty for wrong answers. For example, on a 4-option question:</p>
+                    <ul class="list-disc list-inside space-y-2 text-gray-700">
+                        <li>A random guess has a <strong>25% chance of being right</strong>.</li>
+                        <li>Answering "I don't know" (if even possible) often scores <strong>0%</strong>.</li>
+                    </ul>
+                    <p class="mt-4 text-gray-700">This scoring system creates a powerful incentive to always provide an answer, even if it's a low-confidence guess. The models are optimized to be good test-takers, not necessarily truthful communicators.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="interactive" class="mb-20 scroll-mt-20">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-gray-800">Interactive Demo: Scoring Rules Matter</h2>
+                <p class="text-gray-700 max-w-3xl mx-auto mt-2">See for yourself how different scoring rules change the optimal strategy. A "proper" scoring rule, like Brier or Log, punishes overconfident wrong answers, encouraging the model to only answer when it's truly confident.</p>
+            </div>
+
+            <div class="bg-white p-8 rounded-xl shadow-sm border border-gray-200 max-w-5xl mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div>
+                        <label class="font-medium text-gray-700">1. Select Scoring Rule:</label>
+                        <div class="flex space-x-2 mt-2">
+                            <button id="btn-binary" class="flex-1 py-2 px-4 rounded-md bg-gray-200 text-gray-700 transition">Binary</button>
+                            <button id="btn-brier" class="flex-1 py-2 px-4 rounded-md bg-gray-200 text-gray-700 transition">Brier</button>
+                            <button id="btn-log" class="flex-1 py-2 px-4 rounded-md bg-gray-200 text-gray-700 transition">Log</button>
+                        </div>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label for="confidence-slider" class="font-medium text-gray-700">2. Adjust Model's Confidence: <span id="confidence-value" class="font-bold">50%</span></label>
+                        <input id="confidence-slider" type="range" min="0" max="100" value="50" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-3">
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="scoringChart"></canvas>
+                </div>
+                <div id="rule-explanation" class="mt-4 p-4 bg-gray-50 rounded-md text-center text-gray-600"></div>
+            </div>
+        </section>
+
+        <section id="solution" class="scroll-mt-20">
+             <div class="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-sm border border-gray-200">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">The Solution: A Socio-Technical Fix</h2>
+                <div class="space-y-4 text-gray-700">
+                    <p>The authors argue against creating entirely new "hallucination benchmarks." Doing so would just add another test for developers to optimize for, without fixing the root problem. Instead, they propose a "socio-technical" solution:</p>
+                    <blockquote class="border-l-4 border-indigo-300 pl-4 italic text-gray-600">
+                        "This 'epidemic' of penalizing uncertain responses can only be addressed through... modifying the scoring of existing benchmarks that are misaligned but dominate leaderboards."
+                    </blockquote>
+                    <p>The key is to change the rules of the game. By updating dominant leaderboards like MMLU, HellaSwag, and HLE to use <strong>proper scoring rules</strong> (like Brier or Log scores), we can shift the incentives. This would encourage the development of models that are not just accurate, but also well-calibrated—meaning they know what they don't know.</p>
+                    <p class="font-semibold">This change would steer the entire field toward creating more honest and trustworthy AI systems, without needing to create a whole new suite of tests.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    
+    <footer class="bg-white border-t border-gray-200 mt-20">
+        <div class="container mx-auto px-6 py-8 text-center text-gray-600">
+            <p>Interactive summary of "Why Language Models Hallucinate" by Kalai, Nachum, Vempala, and Zhang (2025).</p>
+            <p class="text-sm mt-2">This page is an interpretation of the paper for educational purposes.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const ctx = document.getElementById('scoringChart').getContext('2d');
+            let scoringChart;
+
+            const confidenceSlider = document.getElementById('confidence-slider');
+            const confidenceValue = document.getElementById('confidence-value');
+            const btnBinary = document.getElementById('btn-binary');
+            const btnBrier = document.getElementById('btn-brier');
+            const btnLog = document.getElementById('btn-log');
+            const ruleExplanation = document.getElementById('rule-explanation');
+
+            let currentRule = 'binary';
+            let currentConfidence = 0.5;
+
+            const explanations = {
+                binary: '<strong>Binary ("All or Nothing"):</strong> You get 1 point if correct, 0 if incorrect. There is no penalty for guessing wrong, making it a good strategy when uncertain.',
+                brier: '<strong>Brier Score:</strong> Measures the accuracy of probabilistic predictions. It rewards well-calibrated confidence and heavily penalizes being confidently wrong. Lower is better, so we plot (1 - Brier Score).',
+                log: '<strong>Log Score:</strong> Severely punishes overconfident, incorrect answers. It strongly incentivizes the model to report its true confidence level. We plot a scaled version for comparability.'
+            };
+
+            function calculateScores(rule, confidence) {
+                const p = confidence;
+                let correct, incorrect, idk;
+
+                // For simplicity, we assume IDK corresponds to a 50/50 uncertain state for scoring purposes,
+                // and a fixed low score for Binary rule.
+                const idkConfidence = 0.5; 
+
+                switch (rule) {
+                    case 'binary':
+                        correct = 1;
+                        incorrect = 0;
+                        idk = 0; // In many tests, not answering is 0, same as a wrong guess.
+                        break;
+                    case 'brier':
+                        // Brier = (p - 1)^2 for correct, (p - 0)^2 for incorrect. We plot 1 - Brier.
+                        correct = 1 - Math.pow(p - 1, 2);
+                        incorrect = 1 - Math.pow(p - 0, 2);
+                        idk = 1 - (Math.pow(idkConfidence - 1, 2) + Math.pow(idkConfidence - 0, 2)) / 2;
+                        break;
+                    case 'log':
+                         // Log score = log(p). Capped at a low value to prevent -Infinity. Scaled for display.
+                        const minLog = -5;
+                        correct = Math.max(minLog, Math.log(p) || minLog);
+                        incorrect = Math.max(minLog, Math.log(1 - p) || minLog);
+                        idk = Math.max(minLog, Math.log(idkConfidence) || minLog);
+                        
+                        // Scale for better visualization
+                        correct = (correct - minLog) / (-minLog) * 2 - 1;
+                        incorrect = (incorrect - minLog) / (-minLog) * 2 - 1;
+                        idk = (idk - minLog) / (-minLog) * 2 - 1;
+                        break;
+                }
+                return { correct, incorrect, idk };
+            }
+
+            function updateChart() {
+                const confidence = parseInt(confidenceSlider.value) / 100;
+                currentConfidence = confidence;
+                confidenceValue.textContent = `${Math.round(confidence * 100)}%`;
+
+                const scores = calculateScores(currentRule, confidence);
+
+                scoringChart.data.datasets[0].data = [scores.correct, scores.incorrect, scores.idk];
+                scoringChart.update();
+                
+                ruleExplanation.innerHTML = explanations[currentRule];
+            }
+
+            function setRule(rule) {
+                currentRule = rule;
+                [btnBinary, btnBrier, btnLog].forEach(btn => btn.classList.remove('active-btn'));
+                document.getElementById(`btn-${rule}`).classList.add('active-btn');
+                updateChart();
+            }
+
+            scoringChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Outcome: Correct', 'Outcome: Incorrect (Guess)', "Outcome: 'I Don't Know'"],
+                    datasets: [{
+                        label: 'Score',
+                        data: [0, 0, 0],
+                        backgroundColor: [
+                            'rgba(75, 192, 192, 0.6)',
+                            'rgba(255, 99, 132, 0.6)',
+                            'rgba(201, 203, 207, 0.6)'
+                        ],
+                        borderColor: [
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(201, 203, 207, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y.toFixed(2);
+                                    }
+                                    return label;
+                                }
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Score Based on Outcome and Confidence',
+                            font: {
+                                size: 16
+                            },
+                            color: '#333'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            min: -1,
+                            max: 1,
+                            title: {
+                                display: true,
+                                text: 'Score (Higher is Better)'
+                            }
+                        }
+                    }
+                }
+            });
+
+            confidenceSlider.addEventListener('input', updateChart);
+            btnBinary.addEventListener('click', () => setRule('binary'));
+            btnBrier.addEventListener('click', () => setRule('brier'));
+            btnLog.addEventListener('click', () => setRule('log'));
+
+            setRule('binary');
+
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>
