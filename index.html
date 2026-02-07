@@ -238,10 +238,12 @@
     })
 
     // download button - assumes resume PDF filename is 'Upasana_Chakraborty_Resume2025.pdf' in the same repo
-    document.getElementById('downloadBtn').addEventListener('click',()=>{
-      const url = 'Upasana_Chakraborty_Resume2025.pdf';
-      const a = document.createElement('a'); a.href = url; a.download = url; document.body.appendChild(a); a.click(); a.remove();
-    })
+    
+document.getElementById('downloadBtn').addEventListener('click', () => {
+  window.open('assets/Upasana_Chakraborty_Resume2025.pdf', '_blank');
+});
+
+
 
     // print
     document.getElementById('printBtn').addEventListener('click',()=>window.print())
